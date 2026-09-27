@@ -44,7 +44,7 @@ export function Home() {
         {/* <Shine /> */}
         <span>{TAGLINE}</span>
       </div>
-      <Flex direction="row">
+      <Flex direction="row" className={styles.sections}>
         <BlogSection />
         <ChangelogSection />
       </Flex>

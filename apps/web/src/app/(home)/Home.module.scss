@@ -1,0 +1,16 @@
+.banner {
+  padding: 64px 32px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--color-gray-text-contrast);
+  border-bottom: 1px solid #2a2a30;
+}
+
+.sections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  padding: 32px;
+  justify-content: center;
+}

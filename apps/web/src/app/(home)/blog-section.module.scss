@@ -1,0 +1,43 @@
+.section {
+  max-width: 480px;
+  flex: 1;
+  min-width: 280px;
+}
+
+.heading {
+  font-size: 16px;
+  margin-bottom: 16px;
+  color: var(--color-gray-text);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.card {
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+.title a:hover {
+  color: #7a8fff;
+}
+
+.date {
+  display: block;
+  font-size: 12px;
+  color: var(--color-gray-text);
+  margin-bottom: 8px;
+}
+
+.body {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-gray-text);
+}
+
+.body > * {
+  margin-bottom: 8px;
+}

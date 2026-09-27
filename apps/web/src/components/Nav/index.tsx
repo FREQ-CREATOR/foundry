@@ -8,7 +8,11 @@ export function Nav() {
     <nav className={styles.Nav}>
       <Flex align="baseline" justify="between" gap="2">
         <Link href="/">Foundry</Link>
-        <Link href="/weapons">Weapons</Link>
+        <Flex gap="2">
+          <Link href="/weapons">Weapons</Link>
+          <Link href="/armor">Armor</Link>
+          <Link href="/perks">Perks</Link>
+        </Flex>
         <SearchBar />
       </Flex>
     </nav>

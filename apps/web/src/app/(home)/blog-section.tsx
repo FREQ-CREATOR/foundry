@@ -6,25 +6,18 @@ import {
   allChangelogs,
   Changelog,
 } from "contentlayer/generated";
+import styles from "./blog-section.module.scss";
 
 function PostCard(post: Post) {
   return (
-    <div className="mb-8">
-      <h2 className="mb-1 text-xl">
-        <Link
-          href={`/posts/${post.url}`}
-          className="text-blue-700 hover:text-blue-900 dark:text-blue-400"
-        >
-          {post.title}
-        </Link>
+    <div className={styles.card}>
+      <h2 className={styles.title}>
+        <Link href={`/posts/${post.url}`}>{post.title}</Link>
       </h2>
-      <time dateTime={post.date} className="mb-2 block text-xs text-gray-600">
+      <time dateTime={post.date} className={styles.date}>
         {format(parseISO(post.date), "LLLL d, yyyy")}
       </time>
-      <div
-        className="text-sm [&>*]:mb-3 [&>*:last-child]:mb-0"
-        dangerouslySetInnerHTML={{ __html: post.body.html }}
-      />
+      <div className={styles.body} dangerouslySetInnerHTML={{ __html: post.body.html }} />
     </div>
   );
 }
@@ -35,7 +28,8 @@ export function BlogSection() {
     .slice(0, 3);
 
   return (
-    <div className="mx-auto max-w-xl py-8">
+    <div className={styles.section}>
+      <h3 className={styles.heading}>Latest Posts</h3>
       {posts.map((post, idx) => (
         <PostCard key={idx} {...post} />
       ))}
@@ -45,22 +39,14 @@ export function BlogSection() {
 
 function ChangelogCard(post: Changelog) {
   return (
-    <div className="mb-8">
-      <h2 className="mb-1 text-xl">
-        <Link
-          href={`/changelog/${post.url}`}
-          className="text-blue-700 hover:text-blue-900 dark:text-blue-400"
-        >
-          {post.title}
-        </Link>
+    <div className={styles.card}>
+      <h2 className={styles.title}>
+        <Link href={`/changelog/${post.url}`}>{post.title}</Link>
       </h2>
-      <time dateTime={post.date} className="mb-2 block text-xs text-gray-600">
+      <time dateTime={post.date} className={styles.date}>
         {format(parseISO(post.date), "LLLL d, yyyy")}
       </time>
-      <div
-        className="text-sm [&>*]:mb-3 [&>*:last-child]:mb-0"
-        dangerouslySetInnerHTML={{ __html: post.body.html }}
-      />
+      <div className={styles.body} dangerouslySetInnerHTML={{ __html: post.body.html }} />
     </div>
   );
 }
@@ -70,7 +56,8 @@ export function ChangelogSection() {
     .slice(0, 3);
 
   return (
-    <div className="mx-auto max-w-xl py-8">
+    <div className={styles.section}>
+      <h3 className={styles.heading}>Latest Changelog</h3>
       {posts.map((post, idx) => (
         <ChangelogCard key={idx} {...post} />
       ))}

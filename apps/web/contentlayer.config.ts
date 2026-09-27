@@ -4,6 +4,8 @@ import {
   defineNestedType,
   makeSource,
 } from "contentlayer/source-files";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 // import { spawn } from "node:child_process";
 // import fs from "fs/promises";
 // import { existsSync, mkdirSync } from "node:fs";
@@ -215,4 +217,12 @@ export default makeSource({
     ExplorerCategories,
     // DestinyInventoryItemDefinition,
   ],
+  markdown: {
+    remarkPlugins: [remarkMath],
+    rehypePlugins: [rehypeKatex],
+  },
+  mdx: {
+    remarkPlugins: [remarkMath],
+    rehypePlugins: [rehypeKatex],
+  },
 });
