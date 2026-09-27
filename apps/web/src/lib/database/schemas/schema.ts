@@ -10,3 +10,9 @@ export const inventoryItems = sqliteTable("DestinyInventoryItemDefinition", {
 
 export type InventoryItem = typeof inventoryItems.$inferSelect; // return type when queried
 export type InsertInventoryItem = typeof inventoryItems.$inferInsert; // insert type
+
+export const manifestDefinitions = sqliteTable("ManifestDefinition", {
+  table: text("table").notNull(),
+  hash: integer("hash").notNull(),
+  json: text("json", { mode: "json" }).notNull(),
+});

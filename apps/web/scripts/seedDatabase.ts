@@ -77,15 +77,42 @@ async function main() {
   const rows = Object.values(items);
   console.log(`Inserting ${rows.length} inventory item definitions...`);
 
-  const insert = sqlite.prepare(
+  const insertItem = sqlite.prepare(
     "INSERT INTO DestinyInventoryItemDefinition (id, json) VALUES (?, ?)"
   );
-  const insertMany = sqlite.transaction((defs: any[]) => {
+  const insertItems = sqlite.transaction((defs: any[]) => {
     for (const def of defs) {
-      insert.run(def.hash, JSON.stringify(def));
+      insertItem.run(def.hash, JSON.stringify(def));
     }
   });
-  insertMany(rows);
+  insertItems(rows);
+
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS ManifestDefinition (
+      "table" TEXT NOT NULL,
+      hash INTEGER NOT NULL,
+      json TEXT NOT NULL,
+      PRIMARY KEY ("table", hash)
+    );
+  `);
+  sqlite.exec(`DELETE FROM ManifestDefinition;`);
+
+  const insertDef = sqlite.prepare(
+    'INSERT INTO ManifestDefinition ("table", hash, json) VALUES (?, ?, ?)'
+  );
+  const insertDefs = sqlite.transaction((defs: [string, number, string][]) => {
+    for (const [table, hash, json] of defs) {
+      insertDef.run(table, hash, json);
+    }
+  });
+
+  for (const tableName of MANIFEST_SLICES) {
+    if (tableName === "DestinyInventoryItemDefinition") continue;
+    const table = (slice as any)[tableName] ?? {};
+    const defs = Object.values(table) as any[];
+    console.log(`Inserting ${defs.length} ${tableName} definitions...`);
+    insertDefs(defs.map((def) => [tableName, def.hash, JSON.stringify(def)]));
+  }
 
   console.log("Done. Database seeded successfully.");
   sqlite.close();

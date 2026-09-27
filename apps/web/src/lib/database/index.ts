@@ -4,3 +4,4 @@ import Database from "better-sqlite3";
 
 const sqlite = new Database("src/lib/database/sqlite.db");
 export const db: BetterSQLite3Database = drizzle(sqlite);
+export { sqlite };
