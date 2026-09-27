@@ -12,10 +12,12 @@ export async function ItemDetail({
   item,
   backHref,
   backLabel,
+  calculator,
 }: {
   item: DestinyInventoryItemDefinition;
   backHref: string;
   backLabel: string;
+  calculator?: React.ReactNode;
 }) {
   const statHashes = Object.keys(item.stats?.stats ?? {}).map(Number);
   const statDefs = await getManifestDefinitions("DestinyStatDefinition", statHashes);
@@ -76,6 +78,13 @@ export async function ItemDetail({
       {item.flavorText && <p className={styles.flavor}>{item.flavorText}</p>}
       {item.displayProperties.description && (
         <p className={styles.description}>{item.displayProperties.description}</p>
+      )}
+
+      {calculator && (
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Calculator</h2>
+          {calculator}
+        </section>
       )}
 
       {stats.length > 0 && (

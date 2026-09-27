@@ -10,6 +10,7 @@
     "seed": "tsx scripts/seedDatabase.ts"
   },
   "dependencies": {
+    "@foundry/oracle-engine": "workspace:*",
     "@foundry/search": "github:d2foundry/search.git",
     "@foundry/ui": "workspace:*",
     "@radix-ui/react-icons": "^1.1.1",

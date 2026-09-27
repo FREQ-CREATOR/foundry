@@ -69,6 +69,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@foundry/oracle-engine':
+        specifier: workspace:*
+        version: link:../../packages/oracle-engine
       '@foundry/search':
         specifier: github:d2foundry/search.git
         version: github.com/d2foundry/search/8d97ec4b9d54ef21fb256566a43cc988af5e2999
