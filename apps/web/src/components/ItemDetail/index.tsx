@@ -140,7 +140,12 @@ export async function ItemDetail({
         </section>
       )}
 
-      {perkGroups.map((group) => (
+      {perkGroups
+        .filter(
+          (group) =>
+            !calculator || !["WEAPON PERKS", "WEAPON MODS"].includes(group.name.toUpperCase())
+        )
+        .map((group) => (
         <section key={group.name} className={styles.section}>
           <h2 className={styles.sectionTitle}>{group.name}</h2>
           <div className={styles.perkGrid}>

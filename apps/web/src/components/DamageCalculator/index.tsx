@@ -41,7 +41,10 @@ export function DamageCalculator({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Record<number, number>>(() => {
     const initial: Record<number, number> = {};
-    for (const col of data.columns) initial[col.socketIndex] = col.defaultHash;
+    for (const col of data.columns) {
+      const hasDefault = col.options.some((o) => o.hash === col.defaultHash);
+      initial[col.socketIndex] = hasDefault ? col.defaultHash : col.options[0]?.hash;
+    }
     return initial;
   });
   const [pvp, setPvp] = useState(false);
@@ -235,14 +238,18 @@ export function DamageCalculator({
             <Stat label="Ready Time" value={`${results.handling.readyTime.toFixed(2)}s`} />
             <Stat label="Stow Time" value={`${results.handling.stowTime.toFixed(2)}s`} />
             <Stat label="ADS Time" value={`${results.handling.adsTime.toFixed(2)}s`} />
-            <Stat
-              label="Hip Falloff"
-              value={`${results.range.hipFalloffStart.toFixed(1)}m - ${results.range.hipFalloffEnd.toFixed(1)}m`}
-            />
-            <Stat
-              label="ADS Falloff"
-              value={`${results.range.adsFalloffStart.toFixed(1)}m - ${results.range.adsFalloffEnd.toFixed(1)}m`}
-            />
+            {results.range.hipFalloffEnd < 200 && (
+              <Stat
+                label="Hip Falloff"
+                value={`${results.range.hipFalloffStart.toFixed(1)}m - ${results.range.hipFalloffEnd.toFixed(1)}m`}
+              />
+            )}
+            {results.range.adsFalloffEnd < 200 && (
+              <Stat
+                label="ADS Falloff"
+                value={`${results.range.adsFalloffStart.toFixed(1)}m - ${results.range.adsFalloffEnd.toFixed(1)}m`}
+              />
+            )}
           </div>
 
           {results.ttk.length > 0 && (

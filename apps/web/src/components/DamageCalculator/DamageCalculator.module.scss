@@ -67,8 +67,11 @@
 
 .columnOptions {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 220px;
+  max-height: 180px;
+  overflow-y: auto;
 }
 
 .columnSelectedInfo {
