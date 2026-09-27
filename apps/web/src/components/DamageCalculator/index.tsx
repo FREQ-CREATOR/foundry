@@ -28,7 +28,16 @@ type Results = {
   range: any;
   ammo: any;
   ttk: any[];
+  pveByEnemy: { label: string; impact: number; crit: number }[];
 } | null;
+
+const ENEMY_TYPES: { value: number; label: string }[] = [
+  { value: 0, label: "Minor (red bar)" },
+  { value: 1, label: "Elite (orange bar)" },
+  { value: 2, label: "Miniboss" },
+  { value: 3, label: "Boss" },
+  { value: 7, label: "Champion" },
+];
 
 export function DamageCalculator({
   weapon,
@@ -50,6 +59,7 @@ export function DamageCalculator({
     return initial;
   });
   const [pvp, setPvp] = useState(false);
+  const [enemyType, setEnemyType] = useState(0);
   const [dynamicTraits, setDynamicTraits] = useState(true);
   const [results, setResults] = useState<Results>(null);
   const [unsupported, setUnsupported] = useState(false);
@@ -108,6 +118,7 @@ export function DamageCalculator({
         engine.addTrait(statBuffs as any, 1, hash);
       }
 
+      engine.setEncounter(0, 0, 0, 0, 1, enemyType);
       const firing = engine.getWeaponFiringData(dynamicTraits, pvp, false);
       const handling = engine.getWeaponHandlingTimes(dynamicTraits, pvp);
       const reload = engine.getWeaponReloadTimes(dynamicTraits, pvp);
@@ -122,15 +133,22 @@ export function DamageCalculator({
         return;
       }
 
+      const pveByEnemy = ENEMY_TYPES.map(({ value, label }) => {
+        engine.setEncounter(0, 0, 0, 0, 1, value);
+        const f = engine.getWeaponFiringData(dynamicTraits, false, false);
+        return { label, impact: f.pveImpactDamage, crit: f.pveImpactDamage * f.pveCritMult };
+      });
+      engine.setEncounter(0, 0, 0, 0, 1, enemyType);
+
       setUnsupported(false);
-      setResults({ firing, handling, reload, range, ammo, ttk });
+      setResults({ firing, handling, reload, range, ammo, ttk, pveByEnemy });
     } catch (err) {
       console.error(err);
       setUnsupported(true);
       setResults(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [engine, selected, pvp, dynamicTraits, data.intrinsicHash]);
+  }, [engine, selected, pvp, enemyType, dynamicTraits, data.intrinsicHash]);
 
   const perkColumns = data.columns.filter((c) => c.kind === "perk");
   const masterworkColumn = data.columns.find((c) => c.kind === "masterwork");
@@ -161,6 +179,20 @@ export function DamageCalculator({
           />
           Apply perks to range/handling/reload
         </label>
+
+        {!pvp && (
+          <select
+            className={styles.enemySelect}
+            value={enemyType}
+            onChange={(e) => setEnemyType(Number(e.target.value))}
+          >
+            {ENEMY_TYPES.map((et) => (
+              <option key={et.value} value={et.value}>
+                {et.label}
+              </option>
+            ))}
+          </select>
+        )}
 
         {loadError && <p className={styles.note}>{loadError}</p>}
         {!engine && !loadError && <p className={styles.note}>Loading calculator…</p>}
@@ -310,6 +342,30 @@ export function DamageCalculator({
                 </div>
               ))}
             </div>
+          </>
+        )}
+
+        {results && results.pveByEnemy.length > 0 && (
+          <>
+            <h3 className={styles.colTitle}>PvE Damage by Enemy</h3>
+            <table className={styles.ttkTable}>
+              <thead>
+                <tr>
+                  <th>Enemy</th>
+                  <th>Body</th>
+                  <th>Crit</th>
+                </tr>
+              </thead>
+              <tbody>
+                {results.pveByEnemy.map((row) => (
+                  <tr key={row.label}>
+                    <td>{row.label}</td>
+                    <td>{Math.round(row.impact)}</td>
+                    <td>{Math.round(row.crit)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </>
         )}
 
