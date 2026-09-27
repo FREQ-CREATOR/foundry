@@ -3,9 +3,6 @@ import { getDestinyItemsByHashes } from "./items";
 import { getManifestDefinitions } from "./manifest";
 import type { DestinyInventoryItemDefinition } from "bungie-api-ts/destiny2";
 
-const COSMETIC_PLUG_CATEGORIES = ["shader", "masterworks", "skins", "ornament"];
-const INTRINSIC_PLUG_CATEGORIES = ["intrinsics", "frames"];
-
 export type PerkOption = {
   hash: number;
   name: string;
@@ -16,6 +13,7 @@ export type PerkOption = {
 
 export type PerkColumn = {
   socketIndex: number;
+  categoryName: string;
   defaultHash: number;
   options: PerkOption[];
 };
@@ -42,6 +40,21 @@ export const getWeaponCalculatorData = async (
   weapon: DestinyInventoryItemDefinition
 ): Promise<CalculatorData> => {
   const socketEntries = (weapon.sockets?.socketEntries ?? []) as any[];
+  const socketCategories = (weapon.sockets?.socketCategories ?? []) as any[];
+
+  const categoryHashes = socketCategories.map((c) => c.socketCategoryHash);
+  const categoryDefs = await getManifestDefinitions(
+    "DestinySocketCategoryDefinition",
+    categoryHashes
+  );
+
+  const categoryNameBySocketIndex = new Map<number, string>();
+  for (const cat of socketCategories) {
+    const name = categoryDefs[cat.socketCategoryHash]?.displayProperties?.name ?? "";
+    for (const socketIndex of cat.socketIndexes ?? []) {
+      categoryNameBySocketIndex.set(socketIndex, name);
+    }
+  }
 
   const plugSetHashes = socketEntries
     .map((s) => s.reusablePlugSetHash)
@@ -69,14 +82,16 @@ export const getWeaponCalculatorData = async (
       : null;
     if (!defaultItem?.plug) return;
 
-    const category = defaultItem.plug.plugCategoryIdentifier ?? "";
+    const categoryName = (categoryNameBySocketIndex.get(socketIndex) ?? "").toUpperCase();
 
-    if (INTRINSIC_PLUG_CATEGORIES.includes(category)) {
+    if (categoryName.includes("INTRINSIC")) {
       intrinsicHash = defaultItem.hash;
       return;
     }
 
-    if (COSMETIC_PLUG_CATEGORIES.some((c) => category.includes(c))) return;
+    if (!categoryName.includes("WEAPON PERKS") && !categoryName.includes("WEAPON MODS")) {
+      return;
+    }
 
     const plugSet = entry.reusablePlugSetHash ? plugSets[entry.reusablePlugSetHash] : null;
     const optionHashes = plugSet?.reusablePlugItems?.length
@@ -99,6 +114,7 @@ export const getWeaponCalculatorData = async (
 
     columns.push({
       socketIndex,
+      categoryName: categoryName.includes("WEAPON MODS") ? "Weapon Mods" : "Weapon Perks",
       defaultHash: defaultItem.hash,
       options,
     });

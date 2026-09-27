@@ -6,7 +6,53 @@ import type { DestinyInventoryItemDefinition } from "bungie-api-ts/destiny2";
 import styles from "./ItemDetail.module.scss";
 
 const BUNGIE_ORIGIN = "https://www.bungie.net";
-const COSMETIC_PLUG_CATEGORIES = ["shader", "masterworks", "skins"];
+
+type PerkGroup = {
+  name: string;
+  perks: DestinyInventoryItemDefinition[];
+};
+
+async function getPerkGroups(item: DestinyInventoryItemDefinition): Promise<PerkGroup[]> {
+  const socketEntries = (item.sockets?.socketEntries ?? []) as any[];
+  const socketCategories = (item.sockets?.socketCategories ?? []) as any[];
+
+  const categoryHashes = socketCategories.map((c) => c.socketCategoryHash);
+  const categoryDefs = await getManifestDefinitions(
+    "DestinySocketCategoryDefinition",
+    categoryHashes
+  );
+
+  const categoryNameBySocketIndex = new Map<number, string>();
+  for (const cat of socketCategories) {
+    const name = categoryDefs[cat.socketCategoryHash]?.displayProperties?.name ?? "";
+    for (const socketIndex of cat.socketIndexes ?? []) {
+      categoryNameBySocketIndex.set(socketIndex, name);
+    }
+  }
+
+  const perkHashes = socketEntries
+    .map((s: any) => s.singleInitialItemHash)
+    .filter((h: number) => !!h);
+  const perkItems = await getDestinyItemsByHashes(perkHashes);
+  const perkByHash = new Map(perkItems.map((p) => [p.hash, p]));
+
+  const groups = new Map<string, DestinyInventoryItemDefinition[]>();
+
+  socketEntries.forEach((entry: any, socketIndex: number) => {
+    const perk = perkByHash.get(entry.singleInitialItemHash);
+    if (!perk?.displayProperties?.name || !perk.displayProperties?.hasIcon) return;
+    const name = perk.displayProperties.name;
+    if (name.startsWith("Empty ") || name.startsWith("Default ")) return;
+
+    const categoryName = categoryNameBySocketIndex.get(socketIndex) ?? "";
+    if (!categoryName || categoryName.toUpperCase().includes("COSMETIC")) return;
+
+    if (!groups.has(categoryName)) groups.set(categoryName, []);
+    groups.get(categoryName)!.push(perk);
+  });
+
+  return Array.from(groups.entries()).map(([name, perks]) => ({ name, perks }));
+}
 
 export async function ItemDetail({
   item,
@@ -28,22 +74,7 @@ export async function ItemDetail({
     : {};
   const damageType = damageTypeHash ? damageTypeDefs[damageTypeHash] : null;
 
-  const socketEntries = item.sockets?.socketEntries ?? [];
-  const perkHashes = socketEntries
-    .map((s: any) => s.singleInitialItemHash)
-    .filter((h: number) => !!h);
-  const perkItems = await getDestinyItemsByHashes(perkHashes);
-  const perkByHash = new Map(perkItems.map((p) => [p.hash, p]));
-
-  const perks = socketEntries
-    .map((s: any) => perkByHash.get(s.singleInitialItemHash))
-    .filter((p: any) => {
-      if (!p || !p.displayProperties?.name || !p.displayProperties?.hasIcon) return false;
-      const name: string = p.displayProperties.name;
-      if (name.startsWith("Empty ") || name.startsWith("Default ")) return false;
-      const category = p.plug?.plugCategoryIdentifier ?? "";
-      return !COSMETIC_PLUG_CATEGORIES.some((c) => category.includes(c));
-    });
+  const perkGroups = await getPerkGroups(item);
 
   const stats = Object.values(item.stats?.stats ?? {})
     .filter((s: any) => statDefs[s.statHash]?.displayProperties?.name)
@@ -109,11 +140,11 @@ export async function ItemDetail({
         </section>
       )}
 
-      {perks.length > 0 && (
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>Perks</h2>
+      {perkGroups.map((group) => (
+        <section key={group.name} className={styles.section}>
+          <h2 className={styles.sectionTitle}>{group.name}</h2>
           <div className={styles.perkGrid}>
-            {perks.map((p: any) => (
+            {group.perks.map((p) => (
               <div key={p.hash} className={styles.perk}>
                 <Image
                   src={`${BUNGIE_ORIGIN}${p.displayProperties.icon}`}
@@ -131,7 +162,7 @@ export async function ItemDetail({
             ))}
           </div>
         </section>
-      )}
+      ))}
     </div>
   );
 }

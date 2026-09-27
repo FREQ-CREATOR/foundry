@@ -16,6 +16,7 @@ export type PerkOption = {
 
 export type PerkColumn = {
   socketIndex: number;
+  categoryName: string;
   defaultHash: number;
   options: PerkOption[];
 };

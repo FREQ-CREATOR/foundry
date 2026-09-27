@@ -21,6 +21,7 @@ const MANIFEST_SLICES = [
   "DestinyDamageTypeDefinition",
   "DestinySocketTypeDefinition",
   "DestinySandboxPerkDefinition",
+  "DestinySocketCategoryDefinition",
 ] as const;
 
 async function $http<T>(config: HttpClientConfig): Promise<T> {

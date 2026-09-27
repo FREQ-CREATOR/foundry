@@ -166,35 +166,56 @@ export function DamageCalculator({
         </label>
       </div>
 
-      {data.columns.length > 0 && (
-        <div className={styles.columns}>
-          {data.columns.map((col) => (
-            <div key={col.socketIndex} className={styles.column}>
-              {col.options.map((opt) => (
-                <button
-                  key={opt.hash}
-                  className={`${styles.perkOption} ${
-                    selected[col.socketIndex] === opt.hash ? styles.perkOptionActive : ""
-                  }`}
-                  title={opt.description}
-                  onClick={() =>
-                    setSelected((prev) => ({ ...prev, [col.socketIndex]: opt.hash }))
-                  }
-                >
-                  <Image
-                    src={`${BUNGIE_ORIGIN}${opt.icon}`}
-                    alt={opt.name}
-                    width={32}
-                    height={32}
-                    unoptimized
-                    className={styles.perkIcon}
-                  />
-                </button>
-              ))}
+      {["Weapon Perks", "Weapon Mods"].map((groupName) => {
+        const cols = data.columns.filter((c) => c.categoryName === groupName);
+        if (cols.length === 0) return null;
+        return (
+          <div key={groupName} className={styles.columnGroup}>
+            <h3 className={styles.columnGroupTitle}>{groupName}</h3>
+            <div className={styles.columns}>
+              {cols.map((col) => {
+                const selectedHash = selected[col.socketIndex];
+                const selectedOption = col.options.find((o) => o.hash === selectedHash);
+                return (
+                  <div key={col.socketIndex} className={styles.column}>
+                    <div className={styles.columnOptions}>
+                      {col.options.map((opt) => (
+                        <button
+                          key={opt.hash}
+                          className={`${styles.perkOption} ${
+                            selectedHash === opt.hash ? styles.perkOptionActive : ""
+                          }`}
+                          title={opt.name}
+                          onClick={() =>
+                            setSelected((prev) => ({ ...prev, [col.socketIndex]: opt.hash }))
+                          }
+                        >
+                          <Image
+                            src={`${BUNGIE_ORIGIN}${opt.icon}`}
+                            alt={opt.name}
+                            width={32}
+                            height={32}
+                            unoptimized
+                            className={styles.perkIcon}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                    {selectedOption && (
+                      <div className={styles.columnSelectedInfo}>
+                        <div className={styles.columnSelectedName}>{selectedOption.name}</div>
+                        <div className={styles.columnSelectedDesc}>
+                          {selectedOption.description}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        );
+      })}
 
       {results && (
         <>

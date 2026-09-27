@@ -40,17 +40,50 @@
   margin-left: 8px;
 }
 
+.columnGroup {
+  margin-bottom: 20px;
+}
+
+.columnGroupTitle {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-gray-text);
+  margin-bottom: 8px;
+}
+
 .columns {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
-  margin-bottom: 20px;
+  gap: 20px;
 }
 
 .column {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  max-width: 220px;
+}
+
+.columnOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.columnSelectedInfo {
+  margin-top: 4px;
+}
+
+.columnSelectedName {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.columnSelectedDesc {
+  font-size: 11px;
+  color: var(--color-gray-text);
+  line-height: 1.4;
 }
 
 .perkOption {
