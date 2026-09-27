@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getDestinyItemByHash } from "@/lib/database/queries/items";
 import { getWeaponCalculatorData } from "@/lib/database/queries/calculator";
+import { getManifestDefinitions } from "@/lib/database/queries/manifest";
 import { ItemDetail } from "@/components/ItemDetail";
 import { DamageCalculator } from "@/components/DamageCalculator";
 
@@ -16,6 +17,17 @@ export default async function WeaponDetailPage({ params }: { params: { hash: str
     stats[Number(statHash)] = (stat as any).value;
   }
 
+  const statHashes = Object.keys(stats).map(Number);
+  const statDefs = await getManifestDefinitions("DestinyStatDefinition", statHashes);
+  const statsDisplay = Object.entries(stats)
+    .filter(([h]) => statDefs[Number(h)]?.displayProperties?.name)
+    .map(([h, value]) => ({
+      hash: Number(h),
+      name: statDefs[Number(h)].displayProperties.name,
+      value,
+    }))
+    .sort((a, b) => b.value - a.value);
+
   const calculator =
     calculatorData.intrinsicHash != null ? (
       <DamageCalculator
@@ -27,6 +39,7 @@ export default async function WeaponDetailPage({ params }: { params: { hash: str
           stats,
         }}
         data={calculatorData}
+        stats={statsDisplay}
       />
     ) : null;
 

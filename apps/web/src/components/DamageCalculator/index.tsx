@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import type { WeaponCalcSummary, CalculatorData } from "./types";
+import type { WeaponCalcSummary, CalculatorData, StatDisplay } from "./types";
 import styles from "./DamageCalculator.module.scss";
 
 const BUNGIE_ORIGIN = "https://www.bungie.net";
@@ -33,9 +33,11 @@ type Results = {
 export function DamageCalculator({
   weapon,
   data,
+  stats,
 }: {
   weapon: WeaponCalcSummary;
   data: CalculatorData;
+  stats: StatDisplay[];
 }) {
   const [engine, setEngine] = useState<Engine | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -68,7 +70,10 @@ export function DamageCalculator({
   }, []);
 
   const optionByHash = useMemo(() => {
-    const map = new Map<number, { hash: number; investmentStats: { statTypeHash: number; value: number }[] }>();
+    const map = new Map<
+      number,
+      { hash: number; investmentStats: { statTypeHash: number; value: number }[] }
+    >();
     for (const col of data.columns) {
       for (const opt of col.options) map.set(opt.hash, opt);
     }
@@ -127,38 +132,27 @@ export function DamageCalculator({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [engine, selected, pvp, dynamicTraits, data.intrinsicHash]);
 
-  if (loadError) {
-    return <p className={styles.note}>{loadError}</p>;
-  }
-
-  if (!engine) {
-    return <p className={styles.note}>Loading calculator…</p>;
-  }
-
-  if (unsupported) {
-    return (
-      <p className={styles.note}>
-        This weapon isn&apos;t supported by the calculator engine yet (no formula data for its
-        archetype).
-      </p>
-    );
-  }
+  const perkColumns = data.columns.filter((c) => c.kind === "perk");
+  const masterworkColumn = data.columns.find((c) => c.kind === "masterwork");
+  const modColumns = data.columns.filter((c) => c.kind === "mod");
 
   return (
-    <div className={styles.container}>
-      <div className={styles.toggles}>
-        <button
-          className={`${styles.toggle} ${!pvp ? styles.toggleActive : ""}`}
-          onClick={() => setPvp(false)}
-        >
-          PvE
-        </button>
-        <button
-          className={`${styles.toggle} ${pvp ? styles.toggleActive : ""}`}
-          onClick={() => setPvp(true)}
-        >
-          PvP
-        </button>
+    <div className={styles.layout}>
+      <div className={styles.statsCol}>
+        <div className={styles.toggles}>
+          <button
+            className={`${styles.toggle} ${!pvp ? styles.toggleActive : ""}`}
+            onClick={() => setPvp(false)}
+          >
+            PvE
+          </button>
+          <button
+            className={`${styles.toggle} ${pvp ? styles.toggleActive : ""}`}
+            onClick={() => setPvp(true)}
+          >
+            PvP
+          </button>
+        </div>
         <label className={styles.checkboxLabel}>
           <input
             type="checkbox"
@@ -167,130 +161,195 @@ export function DamageCalculator({
           />
           Apply perks to range/handling/reload
         </label>
-      </div>
 
-      {["Weapon Perks", "Weapon Mods"].map((groupName) => {
-        const cols = data.columns.filter((c) => c.categoryName === groupName);
-        if (cols.length === 0) return null;
-        return (
-          <div key={groupName} className={styles.columnGroup}>
-            <h3 className={styles.columnGroupTitle}>{groupName}</h3>
-            <div className={styles.columns}>
-              {cols.map((col) => {
-                const selectedHash = selected[col.socketIndex];
-                const selectedOption = col.options.find((o) => o.hash === selectedHash);
-                return (
-                  <div key={col.socketIndex} className={styles.column}>
-                    <div className={styles.columnOptions}>
-                      {col.options.map((opt) => (
-                        <button
-                          key={opt.hash}
-                          className={`${styles.perkOption} ${
-                            selectedHash === opt.hash ? styles.perkOptionActive : ""
-                          }`}
-                          title={opt.name}
-                          onClick={() =>
-                            setSelected((prev) => ({ ...prev, [col.socketIndex]: opt.hash }))
-                          }
-                        >
-                          <Image
-                            src={`${BUNGIE_ORIGIN}${opt.icon}`}
-                            alt={opt.name}
-                            width={32}
-                            height={32}
-                            unoptimized
-                            className={styles.perkIcon}
-                          />
-                        </button>
-                      ))}
-                    </div>
-                    {selectedOption && (
-                      <div className={styles.columnSelectedInfo}>
-                        <div className={styles.columnSelectedName}>{selectedOption.name}</div>
-                        <div className={styles.columnSelectedDesc}>
-                          {selectedOption.description}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })}
+        {loadError && <p className={styles.note}>{loadError}</p>}
+        {!engine && !loadError && <p className={styles.note}>Loading calculator…</p>}
+        {engine && unsupported && (
+          <p className={styles.note}>
+            This weapon isn&apos;t supported by the calculator engine yet.
+          </p>
+        )}
 
-      {results && (
-        <>
-          <div className={styles.statGrid}>
-            <Stat label="RPM" value={Math.round(results.firing.rpm)} />
-            <Stat
+        {results && (
+          <div className={styles.computedList}>
+            <StatRow
               label="Impact"
               value={Math.round(pvp ? results.firing.pvpImpactDamage : results.firing.pveImpactDamage)}
             />
-            <Stat
+            <StatRow
               label="Crit Multiplier"
               value={(pvp ? results.firing.pvpCritMult : results.firing.pveCritMult).toFixed(2)}
             />
-            <Stat label="Magazine" value={Math.round(results.ammo.magSize)} />
-            <Stat label="Reserves" value={Math.round(results.ammo.reserveSize)} />
-            <Stat label="Reload Time" value={`${results.reload.reloadTime.toFixed(2)}s`} />
-            <Stat label="Ready Time" value={`${results.handling.readyTime.toFixed(2)}s`} />
-            <Stat label="Stow Time" value={`${results.handling.stowTime.toFixed(2)}s`} />
-            <Stat label="ADS Time" value={`${results.handling.adsTime.toFixed(2)}s`} />
+            <StatRow label="RPM" value={Math.round(results.firing.rpm)} />
             {results.range.hipFalloffEnd < 200 && (
-              <Stat
-                label="Hip Falloff"
-                value={`${results.range.hipFalloffStart.toFixed(1)}m - ${results.range.hipFalloffEnd.toFixed(1)}m`}
+              <StatRow
+                label="Range"
+                value={`${results.range.hipFalloffStart.toFixed(1)}m hip / ${results.range.adsFalloffStart.toFixed(1)}m ADS`}
               />
             )}
-            {results.range.adsFalloffEnd < 200 && (
-              <Stat
-                label="ADS Falloff"
-                value={`${results.range.adsFalloffStart.toFixed(1)}m - ${results.range.adsFalloffEnd.toFixed(1)}m`}
-              />
-            )}
+            <StatRow label="Magazine" value={Math.round(results.ammo.magSize)} />
+            <StatRow label="Reserves" value={Math.round(results.ammo.reserveSize)} />
+            <StatRow label="Reload" value={`${results.reload.reloadTime.toFixed(2)}s`} />
+            <StatRow label="Ready" value={`${results.handling.readyTime.toFixed(2)}s`} />
+            <StatRow label="Stow" value={`${results.handling.stowTime.toFixed(2)}s`} />
+            <StatRow label="ADS" value={`${results.handling.adsTime.toFixed(2)}s`} />
           </div>
+        )}
 
-          {results.ttk.length > 0 && (
-            <div className={styles.ttkSection}>
-              <h3 className={styles.ttkTitle}>Time to Kill by Resilience</h3>
-              <table className={styles.ttkTable}>
-                <thead>
-                  <tr>
-                    <th>Resilience</th>
-                    <th>Optimal (crits)</th>
-                    <th>Body shots</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {results.ttk.map((row: any) => (
-                    <tr key={row.resillienceValue}>
-                      <td>{row.resillienceValue}</td>
-                      <td>
-                        {row.optimalTtk.headshots}c / {row.optimalTtk.bodyshots}b —{" "}
-                        {row.optimalTtk.timeTaken.toFixed(2)}s
-                      </td>
-                      <td>
-                        {row.bodyTtk.bodyshots}b — {row.bodyTtk.timeTaken.toFixed(2)}s
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div className={styles.statList}>
+          {stats.map((s) => (
+            <div key={s.hash} className={styles.statRow}>
+              <span className={styles.statName}>{s.name}</span>
+              <div className={styles.statBarTrack}>
+                <div className={styles.statBarFill} style={{ width: `${Math.min(100, s.value)}%` }} />
+              </div>
+              <span className={styles.statValue}>{s.value}</span>
             </div>
-          )}
-        </>
-      )}
+          ))}
+        </div>
+      </div>
+
+      <div className={styles.perksCol}>
+        <h3 className={styles.colTitle}>Perks</h3>
+        <div className={styles.perksGrid}>
+          {perkColumns.map((col) => (
+            <div key={col.socketIndex} className={styles.perkColumn}>
+              {col.options.map((opt) => (
+                <button
+                  key={opt.hash}
+                  className={`${styles.perkCircle} ${
+                    selected[col.socketIndex] === opt.hash ? styles.perkCircleActive : ""
+                  }`}
+                  title={`${opt.name} — ${opt.description}`}
+                  onClick={() => setSelected((prev) => ({ ...prev, [col.socketIndex]: opt.hash }))}
+                >
+                  <Image
+                    src={`${BUNGIE_ORIGIN}${opt.icon}`}
+                    alt={opt.name}
+                    width={36}
+                    height={36}
+                    unoptimized
+                    className={styles.perkCircleIcon}
+                  />
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div className={styles.selectedPerkList}>
+          {perkColumns.map((col) => {
+            const opt = col.options.find((o) => o.hash === selected[col.socketIndex]);
+            if (!opt) return null;
+            return (
+              <div key={col.socketIndex} className={styles.selectedPerkRow}>
+                <span className={styles.selectedPerkName}>{opt.name}</span>
+                <span className={styles.selectedPerkDesc}>{opt.description}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className={styles.mwCol}>
+        {masterworkColumn && (
+          <>
+            <h3 className={styles.colTitle}>Masterwork</h3>
+            <div className={styles.mwList}>
+              {masterworkColumn.options.map((opt) => (
+                <button
+                  key={opt.hash}
+                  className={`${styles.mwOption} ${
+                    selected[masterworkColumn.socketIndex] === opt.hash ? styles.mwOptionActive : ""
+                  }`}
+                  onClick={() =>
+                    setSelected((prev) => ({ ...prev, [masterworkColumn.socketIndex]: opt.hash }))
+                  }
+                >
+                  <Image
+                    src={`${BUNGIE_ORIGIN}${opt.icon}`}
+                    alt={opt.name}
+                    width={24}
+                    height={24}
+                    unoptimized
+                    className={styles.mwIcon}
+                  />
+                  <span>{opt.name}</span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {modColumns.length > 0 && (
+          <>
+            <h3 className={styles.colTitle}>Weapon Mods</h3>
+            <div className={styles.perksGrid}>
+              {modColumns.map((col) => (
+                <div key={col.socketIndex} className={styles.perkColumn}>
+                  {col.options.map((opt) => (
+                    <button
+                      key={opt.hash}
+                      className={`${styles.perkCircle} ${
+                        selected[col.socketIndex] === opt.hash ? styles.perkCircleActive : ""
+                      }`}
+                      title={`${opt.name} — ${opt.description}`}
+                      onClick={() =>
+                        setSelected((prev) => ({ ...prev, [col.socketIndex]: opt.hash }))
+                      }
+                    >
+                      <Image
+                        src={`${BUNGIE_ORIGIN}${opt.icon}`}
+                        alt={opt.name}
+                        width={36}
+                        height={36}
+                        unoptimized
+                        className={styles.perkCircleIcon}
+                      />
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {results && results.ttk.length > 0 && (
+          <>
+            <h3 className={styles.colTitle}>Time to Kill</h3>
+            <table className={styles.ttkTable}>
+              <thead>
+                <tr>
+                  <th>Res</th>
+                  <th>Crit</th>
+                  <th>Body</th>
+                </tr>
+              </thead>
+              <tbody>
+                {results.ttk.map((row: any) => (
+                  <tr key={row.resillienceValue}>
+                    <td>{row.resillienceValue}</td>
+                    <td>
+                      {row.optimalTtk.headshots}c/{row.optimalTtk.bodyshots}b {row.optimalTtk.timeTaken.toFixed(2)}s
+                    </td>
+                    <td>
+                      {row.bodyTtk.bodyshots}b {row.bodyTtk.timeTaken.toFixed(2)}s
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        )}
+      </div>
     </div>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string | number }) {
+function StatRow({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className={styles.stat}>
-      <span className={styles.statLabel}>{label}</span>
-      <span className={styles.statValue}>{value}</span>
+    <div className={styles.computedRow}>
+      <span className={styles.computedLabel}>{label}</span>
+      <span className={styles.computedValue}>{value}</span>
     </div>
   );
 }

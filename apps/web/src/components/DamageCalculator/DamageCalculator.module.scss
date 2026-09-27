@@ -1,5 +1,14 @@
-.container {
-  margin-top: 8px;
+.layout {
+  display: grid;
+  grid-template-columns: 240px 1fr 220px;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
 }
 
 .note {
@@ -8,11 +17,22 @@
   font-style: italic;
 }
 
+.colTitle {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-gray-text);
+  margin: 14px 0 8px;
+}
+
+.colTitle:first-child {
+  margin-top: 0;
+}
+
 .toggles {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .toggle {
@@ -35,133 +55,180 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--color-gray-text);
-  margin-left: 8px;
+  margin-bottom: 12px;
 }
 
-.columnGroup {
-  margin-bottom: 20px;
+.statsCol {
+  min-width: 0;
 }
 
-.columnGroupTitle {
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--color-gray-text);
-  margin-bottom: 8px;
-}
-
-.columns {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-}
-
-.column {
+.computedList {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  max-width: 220px;
-}
-
-.columnOptions {
-  display: flex;
-  flex-wrap: wrap;
   gap: 4px;
-  max-width: 220px;
-  max-height: 180px;
-  overflow-y: auto;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #2a2a30;
 }
 
-.columnSelectedInfo {
-  margin-top: 4px;
-}
-
-.columnSelectedName {
+.computedRow {
+  display: flex;
+  justify-content: space-between;
   font-size: 12px;
+}
+
+.computedLabel {
+  color: var(--color-gray-text);
+}
+
+.computedValue {
   font-weight: 600;
 }
 
-.columnSelectedDesc {
-  font-size: 11px;
+.statList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.statRow {
+  display: grid;
+  grid-template-columns: 80px 1fr 28px;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.statName {
+  color: var(--color-gray-text);
+}
+
+.statBarTrack {
+  height: 5px;
+  border-radius: 3px;
+  background: #222226;
+  overflow: hidden;
+}
+
+.statBarFill {
+  height: 100%;
+  background: #7a8fff;
+}
+
+.statValue {
+  text-align: right;
+}
+
+.perksCol {
+  min-width: 0;
+}
+
+.perksGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.perkColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.perkCircle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #1a1a1e;
+  border: 1px solid #2a2a30;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.perkCircleActive {
+  border-color: #7a8fff;
+  box-shadow: 0 0 0 2px rgba(122, 143, 255, 0.4);
+}
+
+.perkCircleIcon {
+  border-radius: 50%;
+}
+
+.selectedPerkList {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.selectedPerkRow {
+  font-size: 12px;
+}
+
+.selectedPerkName {
+  font-weight: 600;
+  display: block;
+}
+
+.selectedPerkDesc {
   color: var(--color-gray-text);
   line-height: 1.4;
 }
 
-.perkOption {
-  padding: 4px;
-  border-radius: 6px;
-  background: #1a1a1e;
-  border: 1px solid #2a2a30;
-  cursor: pointer;
-  line-height: 0;
+.mwCol {
+  min-width: 0;
 }
 
-.perkOptionActive {
+.mwList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mwOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1a1a1e;
+  border: 1px solid #2a2a30;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.mwOptionActive {
   border-color: #7a8fff;
   background: #2f3663;
 }
 
-.perkIcon {
+.mwIcon {
   border-radius: 4px;
-  display: block;
-}
-
-.statGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 10px;
-  margin-bottom: 24px;
-}
-
-.stat {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 10px;
-  border-radius: 6px;
-  background: #1a1a1e;
-  border: 1px solid #2a2a30;
-}
-
-.statLabel {
-  font-size: 11px;
-  color: var(--color-gray-text);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.statValue {
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.ttkSection {
-  margin-top: 16px;
-}
-
-.ttkTitle {
-  font-size: 16px;
-  margin-bottom: 10px;
+  flex-shrink: 0;
 }
 
 .ttkTable {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 11px;
 }
 
 .ttkTable th,
 .ttkTable td {
   text-align: left;
-  padding: 6px 10px;
+  padding: 4px 6px;
   border-bottom: 1px solid #2a2a30;
 }
 
 .ttkTable th {
   color: var(--color-gray-text);
   font-weight: 500;
-  font-size: 11px;
   text-transform: uppercase;
+  font-size: 10px;
 }

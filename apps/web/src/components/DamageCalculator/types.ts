@@ -17,8 +17,15 @@ export type PerkOption = {
 export type PerkColumn = {
   socketIndex: number;
   categoryName: string;
+  kind: "perk" | "mod" | "masterwork";
   defaultHash: number;
   options: PerkOption[];
+};
+
+export type StatDisplay = {
+  hash: number;
+  name: string;
+  value: number;
 };
 
 export type CalculatorData = {

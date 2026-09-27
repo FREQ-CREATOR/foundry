@@ -30,22 +30,38 @@ async function getPerkGroups(item: DestinyInventoryItemDefinition): Promise<Perk
     }
   }
 
-  const perkHashes = socketEntries
-    .map((s: any) => s.singleInitialItemHash)
-    .filter((h: number) => !!h);
-  const perkItems = await getDestinyItemsByHashes(perkHashes);
+  const plugSetHashOf = (entry: any): number | null =>
+    entry.reusablePlugSetHash || entry.randomizedPlugSetHash || null;
+
+  const plugSetHashes = socketEntries.map(plugSetHashOf).filter((h): h is number => !!h);
+  const plugSets = await getManifestDefinitions("DestinyPlugSetDefinition", plugSetHashes);
+
+  const perkHashes = new Set<number>();
+  for (const entry of socketEntries) {
+    if (entry.singleInitialItemHash) perkHashes.add(entry.singleInitialItemHash);
+    const plugSetHash = plugSetHashOf(entry);
+    const plugSet = plugSetHash ? plugSets[plugSetHash] : null;
+    if (plugSet?.reusablePlugItems?.[0]) perkHashes.add(plugSet.reusablePlugItems[0].plugItemHash);
+  }
+  const perkItems = await getDestinyItemsByHashes(Array.from(perkHashes));
   const perkByHash = new Map(perkItems.map((p) => [p.hash, p]));
 
   const groups = new Map<string, DestinyInventoryItemDefinition[]>();
 
   socketEntries.forEach((entry: any, socketIndex: number) => {
-    const perk = perkByHash.get(entry.singleInitialItemHash);
+    const categoryName = categoryNameBySocketIndex.get(socketIndex) ?? "";
+    if (!categoryName || categoryName.toUpperCase().includes("COSMETIC")) return;
+
+    let perk = entry.singleInitialItemHash ? perkByHash.get(entry.singleInitialItemHash) : null;
+    if (!perk) {
+      const plugSetHash = plugSetHashOf(entry);
+      const plugSet = plugSetHash ? plugSets[plugSetHash] : null;
+      const firstHash = plugSet?.reusablePlugItems?.[0]?.plugItemHash;
+      perk = firstHash ? perkByHash.get(firstHash) : undefined;
+    }
     if (!perk?.displayProperties?.name || !perk.displayProperties?.hasIcon) return;
     const name = perk.displayProperties.name;
     if (name.startsWith("Empty ") || name.startsWith("Default ")) return;
-
-    const categoryName = categoryNameBySocketIndex.get(socketIndex) ?? "";
-    if (!categoryName || categoryName.toUpperCase().includes("COSMETIC")) return;
 
     if (!groups.has(categoryName)) groups.set(categoryName, []);
     groups.get(categoryName)!.push(perk);
@@ -118,7 +134,7 @@ export async function ItemDetail({
         </section>
       )}
 
-      {stats.length > 0 && (
+      {!calculator && stats.length > 0 && (
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>Stats</h2>
           <div className={styles.statList}>
